@@ -17,9 +17,11 @@ function encryptContent($virus)
   - Payload code as hash ready to execute 
   - Original code of file
 
+It does simply replicate itself in every php file. After that, it will run commands from ``data.json`` file. If file version is lower, it will get content from ``update.json`` file and update itself.
+
 ## About
 
-This repository is purely for educational purposes. This code will infect all of your PHP files.
+This repository is purely for educational purposes. This code will infect all of your PHP files. Use with caution.
 
 
 

