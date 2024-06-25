@@ -22,8 +22,3 @@ It does simply replicate itself in every php file. After that, it will run comma
 ## About
 
 This repository is purely for educational purposes. This code will infect all of your PHP files. Use with caution.
-
-
-
-
-Related to this video: https://www.youtube.com/watch?v=2Ra1CCG8Guo
